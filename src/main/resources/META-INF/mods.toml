@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[37,)"
+license="All rights reserved"
+[[mods]]
+    modId="geocraft"
+    version="0.0.1"
+    displayName="GeodesyCraft"
+    logoFile="examplemod.png"
+    credits="Thanks for this example mod goes to Java"
+    authors="LeDeux, kennyass"
+    description='''
+    Modification which add special tools for surveying
+    '''
+[[dependencies.GeodesyCraft]]
+    modId="forge"
+    mandatory=true
+    versionRange="[37,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.GeodesyCraft]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.17.1,1.18)"
+    ordering="NONE"
+    side="BOTH"
