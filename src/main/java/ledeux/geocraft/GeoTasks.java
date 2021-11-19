@@ -4,184 +4,251 @@ public class GeoTasks {
 
     // Прямоугольные координаты трех основных точек
     private double[] baseXYZ = new double[3];
-    private double[] initDirXYZ = new double[3];
-    private double[] finalDirXYZ = new double[3];
-
-    // Разность прямоугольных координат базы и точки начального направления
-    private double diffInitX = initDirXYZ[0]-baseXYZ[0];
-    private double diffInitY = initDirXYZ[1]-baseXYZ[1];
-    private double diffInitZ = initDirXYZ[2]-baseXYZ[2];
+    private double[] initXYZ = new double[3];
+    private double[] finalXYZ = new double[3];
 
     // TODO: реализовать изменение baseHeight и aimHeight
-    // Высоты тахеометра и визирных целей
-    private double baseHeight = 1.70;
-    private double initAimHeight = 1.70;
-    private double finalAimHeight = 1.70;
 
-    // Горизонтальный и вертикальный углы
-    private double horizontalAngleDeg;
-    private double horizontalAngle = Math.toRadians(horizontalAngleDeg);
-    private double verticalAngleDeg;
-    private double verticalAngle = Math.toRadians(verticalAngleDeg);
+    // Разность прямоугольных координат точек и базы
+    private double[] diffInit = new double[3];
+    private double[] diffFinal = new double[3];
 
-    // Расстояния до начальной и искомой точки
+    // Наклонные и горизонтальные расстояния до начальной и искомой точки
     private double initDistance;
     private double initHorizontalDistance;
     private double finalDistance;
     private double finalHorizontalDistance;
 
-    // Румб и азимуты направлений
+    // Превышение (для обратной геодезической задачи)
+    private double elevation;
+
+    // Румбы, азимуты направлений и горизонтальный угол
     private double initRhumb;
+    private double finalRhumb;
     private double initAzimuth;
     private double finalAzimuth;
+    private double horizontalAngle;
+
+    // Вертикальные направления и угол
+    private double initVerticalDir;
+    private double finalVerticalDir;
+    private double verticalAngle;
 
     // Прямая геодезическая задача (получение координат искомого пункта)
     public void directTask() {
 
-        initRhumb = Math.atan2(diffInitX, diffInitZ);
-        finalAzimuth = initAzimuth + horizontalAngle;
-        findDistance();
-        double angle = Math.atan2(diffInitY, initHorizontalDistance);
-
-        // TODO: разобраться с вертикальными углами
-        double diffAngle = verticalAngle - angle;
-        finalHorizontalDistance = finalDistance * Math.cos(Math.abs(diffAngle));
-        double diffFinalX;
+        inverseTask();
+        findFinalDistance();
+        findFinalRhumb();
+        finalRhumbToAzimuth();
+        findHorizontalAngle();
+        findInitVerticalDir();
+        findFinalVerticalDir();
+        findVerticalAngle();
     }
 
-    // Обратная геодезическая задача (получение азимута направления и расстояния)
+    // Обратная геодезическая задача (получение азимута направления, расстояний и превышения)
     public void inverseTask() {
 
-        // Наклонное и горизонтальное расстояние
-        findDistance();
-        // Находим румб и азимут начального направления
-        initRhumb = Math.atan2(diffInitX, diffInitZ);
-        // Находим азимут до искомой точки
-        rhumbToAzimuth();
+        findInitDistance();
+        findInitRhumb();
+        initRhumbToAzimuth();
+        elevation = initXYZ[1] - baseXYZ[1];
     }
 
-    // Метод нахождения расстояний
-    public void findDistance() {
+    // Разница координат начальной точки и базы
+    public void findDiffInitXYZ() {
 
-        initDistance = Math.sqrt(Math.pow(diffInitX, 2) + Math.pow(diffInitY, 2) + Math.pow(diffInitZ, 2));
-        initHorizontalDistance = Math.sqrt(Math.pow(diffInitX, 2) + Math.pow(diffInitZ, 2));
+        for (int i = 0; i < 3; i++) {
+            diffInit[i] = initXYZ[i] - baseXYZ[i];
+        }
     }
 
-    // Переход от румба направления к азимуту
-    public void rhumbToAzimuth() {
+    // Разница координат конечного пункта и базы
+    public void findDiffFinalXYZ() {
 
-        if ((initDirXYZ[0] - baseXYZ[0] > 0) && (initDirXYZ[2] - baseXYZ[2] > 0)) {
+        for (int i = 0; i < 3; i++) {
+            diffFinal[i] = finalXYZ[i] - baseXYZ[i];
+        }
+    }
+
+    // Расчет расстояния и горизонтального проложения до начальной точки
+    public void findInitDistance() {
+
+        initDistance = Math.sqrt(Math.pow(diffInit[0], 2) + Math.pow(diffInit[1], 2) + Math.pow(diffInit[2], 2));
+        initHorizontalDistance = Math.sqrt(Math.pow(diffInit[0], 2) + Math.pow(diffInit[2], 2));
+    }
+
+    // Расчет расстояния и горизонтального проложения до конечной точки
+    public void findFinalDistance() {
+
+        finalDistance = Math.sqrt(Math.pow(diffFinal[0], 2) + Math.pow(diffFinal[1], 2) + Math.pow(diffFinal[2], 2));
+        finalHorizontalDistance = Math.sqrt(Math.pow(diffFinal[0], 2) + Math.pow(diffFinal[2], 2));
+    }
+
+    // Расчет румба начального направления
+    public void findInitRhumb() {
+
+        if (diffInit[0] == 0) {
+            initRhumb = 0;
+        } else if (diffInit[2] == 0) {
+            initRhumb = Math.PI / 2;
+        } else {
+            initRhumb = Math.atan2(diffInit[0], diffInit[2]);
+        }
+    }
+
+    // Расчет румба конечного направления
+    public void findFinalRhumb() {
+
+        if (diffFinal[0] == 0) {
+            finalRhumb = 0;
+        } else if (diffFinal[2] == 0) {
+            finalRhumb = Math.PI / 2;
+        } else {
+            finalRhumb = Math.atan2(diffFinal[0], diffFinal[2]);
+        }
+    }
+
+    // Переход от румба начального направления к азимуту
+    public void initRhumbToAzimuth() {
+
+        if ((diffInit[0] <= 0) && (diffInit[2] > 0)) {
             initAzimuth = initRhumb;
         }
 
-        if ((initDirXYZ[0] - baseXYZ[0] > 0) && (initDirXYZ[2] - baseXYZ[2] < 0)) {
+        if ((diffInit[0] < 0) && (diffInit[2] <= 0)) {
             initAzimuth = Math.PI - initRhumb;
         }
 
-        if ((initDirXYZ[0] - baseXYZ[0] < 0) && (initDirXYZ[2] - baseXYZ[2] < 0)) {
-            initAzimuth = Math.PI + initRhumb;
+        if ((diffInit[0] >= 0) && (diffInit[2] < 0)) {
+            initAzimuth = - (Math.PI - initRhumb);
         }
 
-        if ((initDirXYZ[0] - baseXYZ[0] < 0) && (initDirXYZ[2] - baseXYZ[2] > 0)) {
-            initAzimuth = 2 * Math.PI - initRhumb;
+        if ((diffInit[0] > 0) && (diffInit[2] >= 0)) {
+            initAzimuth = - initRhumb;
         }
     }
 
-    // Различные сеттеры и геттеры для переменных экземпляра
-    public void setBaseXYZ(double[] newBaseXYZ) {
-        baseXYZ = newBaseXYZ;
+    // Переход от румба конечного направления к азимуту
+    public void finalRhumbToAzimuth() {
+
+        if ((diffFinal[0] <= 0) && (diffFinal[2] > 0)) {
+            finalAzimuth = finalRhumb;
+        }
+
+        if ((diffFinal[0] < 0) && (diffFinal[2] <= 0)) {
+            finalAzimuth = Math.PI - finalRhumb;
+        }
+
+        if ((diffFinal[0] >= 0) && (diffFinal[2] < 0)) {
+            finalAzimuth = - (Math.PI - finalRhumb);
+        }
+
+        if ((diffFinal[0] > 0) && (diffFinal[2] >= 0)) {
+            finalAzimuth = - finalRhumb;
+        }
+    }
+
+    // Расчет вертикального направления на начальную точку
+    public void findInitVerticalDir() {
+
+        double horizontalDistance = Math.sqrt(Math.pow(diffInit[0], 2) + Math.pow(diffInit[2], 2));
+        double difference = initXYZ[1] - baseXYZ[1];
+        if (difference <= 0) {
+            initVerticalDir = Math.atan2(Math.abs(difference), horizontalDistance);
+        } else {
+            initVerticalDir = - Math.atan2(Math.abs(difference), horizontalDistance);
+        }
+    }
+
+    // Расчет вертикального направления на конечную точку
+    public void findFinalVerticalDir() {
+
+        double horizontalDistance = Math.sqrt(Math.pow(diffFinal[0], 2) + Math.pow(diffFinal[2], 2));
+        double difference = finalXYZ[1] - baseXYZ[1];
+        if (difference <= 0) {
+            finalVerticalDir = Math.atan2(Math.abs(difference), horizontalDistance);
+        } else {
+            finalVerticalDir = - Math.atan2(Math.abs(difference), horizontalDistance);
+        }
+    }
+
+    // Расчет горизонтального угла между направлениями
+    public void findHorizontalAngle() {
+        horizontalAngle = finalAzimuth - initAzimuth;
+    }
+
+    // Расчет вертикального угла между направлениями
+    public void findVerticalAngle() {
+        verticalAngle = finalVerticalDir - initVerticalDir;
     }
 
     public double[] getBaseXYZ() {
         return baseXYZ;
     }
 
-    public void setInitDirXYZ(double[] newInitDirXYZ) {
-        initDirXYZ = newInitDirXYZ;
+    public void setBaseXYZ(double[] baseXYZ) {
+        this.baseXYZ = baseXYZ;
     }
 
-    public double[] getInitDirXYZ() {
-        return initDirXYZ;
+    public double[] getInitXYZ() {
+        return initXYZ;
     }
 
-    public void setFinalDirXYZ(double[] newFinalDirXYZ) {
-        finalDirXYZ = newFinalDirXYZ;
+    public void setInitXYZ(double[] initXYZ) {
+        this.initXYZ = initXYZ;
     }
 
-    public double[] getFinalDirXYZ() {
-        return finalDirXYZ;
+    public double[] getFinalXYZ() {
+        return finalXYZ;
     }
 
-    public void setBaseHeight(double newBaseHeight) {
-        baseHeight = newBaseHeight;
+    public void setFinalXYZ(double[] finalXYZ) {
+        this.finalXYZ = finalXYZ;
     }
 
-    public double getBaseHeight() {
-        return baseHeight;
+    public double getInitDistance() {
+        return initDistance;
     }
 
-    public void setInitAimHeight(double newInitAimHeight) {
-        initAimHeight = newInitAimHeight;
+    public double getInitHorizontalDistance() {
+        return initHorizontalDistance;
     }
 
-    public double getInitAimHeight() {
-        return initAimHeight;
+    public double getFinalDistance() {
+        return finalDistance;
     }
 
-    public void setFinalAimHeight(double newFinalAimHeight) {
-        finalAimHeight = newFinalAimHeight;
+    public double getFinalHorizontalDistance() {
+        return finalHorizontalDistance;
     }
 
-    public double getFinalAimHeight() {
-        return finalAimHeight;
-    }
-
-    public void setHorizontalAngleDeg(double newHorizontalAngleDeg) {
-        horizontalAngleDeg = newHorizontalAngleDeg;
-    }
-
-    public double getHorizontalAngleDeg() {
-        return horizontalAngleDeg;
-    }
-
-    public void setVerticalAngleDeg(double newVerticalAngleDeg) {
-        verticalAngleDeg = newVerticalAngleDeg;
-    }
-
-    public double getVerticalAngleDeg() {
-        return verticalAngleDeg;
-    }
-
-    public void setInitAzimuth(double newInitAzimuth) {
-        initAzimuth = newInitAzimuth;
+    public double getElevation() {
+        return elevation;
     }
 
     public double getInitAzimuth() {
         return initAzimuth;
     }
 
-    public void setFinalAzimuth(double newFinalAzimuth) {
-        finalAzimuth = newFinalAzimuth;
-    }
-
     public double getFinalAzimuth() {
         return finalAzimuth;
     }
 
-    public void setInitRhumb(double newInitRhumb) {
-        initRhumb = newInitRhumb;
+    public double getHorizontalAngle() {
+        return horizontalAngle;
     }
 
-    public double getInitRhumb() {
-            return initRhumb;
+    public double getInitVerticalDir() {
+        return initVerticalDir;
     }
 
-    // TODO: добавить сеттеры и геттеры для всех переменных
-    public void setDistance(double newDistance) {
-        distance = newDistance;
+    public double getFinalVerticalDir() {
+        return finalVerticalDir;
     }
 
-    public double getDistance() {
-        return distance;
+    public double getVerticalAngle() {
+        return verticalAngle;
     }
 }
