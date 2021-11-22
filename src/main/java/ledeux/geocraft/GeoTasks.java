@@ -38,6 +38,7 @@ public class GeoTasks {
     public void directTask() {
 
         inverseTask();
+        findDiffFinalXYZ();
         findFinalDistance();
         findFinalRhumb();
         finalRhumbToAzimuth();
@@ -50,10 +51,11 @@ public class GeoTasks {
     // Обратная геодезическая задача (получение азимута направления, расстояний и превышения)
     public void inverseTask() {
 
+        findDiffInitXYZ();
         findInitDistance();
         findInitRhumb();
         initRhumbToAzimuth();
-        elevation = initXYZ[1] - baseXYZ[1];
+        elevation = diffInit[1];
     }
 
     // Разница координат начальной точки и базы
@@ -92,9 +94,9 @@ public class GeoTasks {
         if (diffInit[0] == 0) {
             initRhumb = 0;
         } else if (diffInit[2] == 0) {
-            initRhumb = Math.PI / 2;
+            initRhumb = Math.toDegrees(Math.PI / 2);
         } else {
-            initRhumb = Math.atan2(diffInit[0], diffInit[2]);
+            initRhumb = Math.toDegrees(Math.atan2(Math.abs(diffInit[0]), Math.abs(diffInit[2])));
         }
     }
 
@@ -104,9 +106,9 @@ public class GeoTasks {
         if (diffFinal[0] == 0) {
             finalRhumb = 0;
         } else if (diffFinal[2] == 0) {
-            finalRhumb = Math.PI / 2;
+            finalRhumb = Math.toDegrees(Math.PI / 2);
         } else {
-            finalRhumb = Math.atan2(diffFinal[0], diffFinal[2]);
+            finalRhumb = Math.toDegrees(Math.atan2(Math.abs(diffFinal[0]), Math.abs(diffFinal[2])));
         }
     }
 
@@ -116,15 +118,12 @@ public class GeoTasks {
         if ((diffInit[0] <= 0) && (diffInit[2] > 0)) {
             initAzimuth = initRhumb;
         }
-
         if ((diffInit[0] < 0) && (diffInit[2] <= 0)) {
-            initAzimuth = Math.PI - initRhumb;
+            initAzimuth = Math.toDegrees(Math.PI - Math.toRadians(initRhumb));
         }
-
         if ((diffInit[0] >= 0) && (diffInit[2] < 0)) {
-            initAzimuth = - (Math.PI - initRhumb);
+            initAzimuth = Math.toDegrees(- (Math.PI - Math.toRadians(initRhumb)));
         }
-
         if ((diffInit[0] > 0) && (diffInit[2] >= 0)) {
             initAzimuth = - initRhumb;
         }
@@ -136,15 +135,12 @@ public class GeoTasks {
         if ((diffFinal[0] <= 0) && (diffFinal[2] > 0)) {
             finalAzimuth = finalRhumb;
         }
-
         if ((diffFinal[0] < 0) && (diffFinal[2] <= 0)) {
-            finalAzimuth = Math.PI - finalRhumb;
+            finalAzimuth = Math.toDegrees(Math.PI - Math.toRadians(finalRhumb));
         }
-
         if ((diffFinal[0] >= 0) && (diffFinal[2] < 0)) {
-            finalAzimuth = - (Math.PI - finalRhumb);
+            finalAzimuth = Math.toDegrees(- (Math.PI - Math.toRadians(finalRhumb)));
         }
-
         if ((diffFinal[0] > 0) && (diffFinal[2] >= 0)) {
             finalAzimuth = - finalRhumb;
         }
@@ -154,11 +150,10 @@ public class GeoTasks {
     public void findInitVerticalDir() {
 
         double horizontalDistance = Math.sqrt(Math.pow(diffInit[0], 2) + Math.pow(diffInit[2], 2));
-        double difference = initXYZ[1] - baseXYZ[1];
-        if (difference <= 0) {
-            initVerticalDir = Math.atan2(Math.abs(difference), horizontalDistance);
+        if (diffInit[1] <= 0) {
+            initVerticalDir = Math.toDegrees(Math.atan2(Math.abs(diffInit[1]), horizontalDistance));
         } else {
-            initVerticalDir = - Math.atan2(Math.abs(difference), horizontalDistance);
+            initVerticalDir = Math.toDegrees(- Math.atan2(Math.abs(diffInit[1]), horizontalDistance));
         }
     }
 
@@ -166,11 +161,10 @@ public class GeoTasks {
     public void findFinalVerticalDir() {
 
         double horizontalDistance = Math.sqrt(Math.pow(diffFinal[0], 2) + Math.pow(diffFinal[2], 2));
-        double difference = finalXYZ[1] - baseXYZ[1];
-        if (difference <= 0) {
-            finalVerticalDir = Math.atan2(Math.abs(difference), horizontalDistance);
+        if (diffFinal[1] <= 0) {
+            finalVerticalDir = Math.toDegrees(Math.atan2(Math.abs(diffFinal[1]), horizontalDistance));
         } else {
-            finalVerticalDir = - Math.atan2(Math.abs(difference), horizontalDistance);
+            finalVerticalDir = Math.toDegrees(- Math.atan2(Math.abs(diffFinal[1]), horizontalDistance));
         }
     }
 
@@ -184,6 +178,7 @@ public class GeoTasks {
         verticalAngle = finalVerticalDir - initVerticalDir;
     }
 
+    // Геттеры и сеттеры
     public double[] getBaseXYZ() {
         return baseXYZ;
     }
@@ -226,6 +221,22 @@ public class GeoTasks {
 
     public double getElevation() {
         return elevation;
+    }
+
+    public double[] getDiffInit() {
+        return diffInit;
+    }
+
+    public double[] getDiffFinal() {
+        return diffFinal;
+    }
+
+    public double getInitRhumb() {
+        return initRhumb;
+    }
+
+    public double getFinalRhumb() {
+        return finalRhumb;
     }
 
     public double getInitAzimuth() {

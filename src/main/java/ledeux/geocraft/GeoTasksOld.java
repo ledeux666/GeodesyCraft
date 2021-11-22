@@ -167,22 +167,6 @@ public class GeoTasksOld {
         return finalAimHeight;
     }
 
-    public void setHorizontalAngleDeg(double newHorizontalAngleDeg) {
-        horizontalAngleDeg = newHorizontalAngleDeg;
-    }
-
-    public double getHorizontalAngleDeg() {
-        return horizontalAngleDeg;
-    }
-
-    public void setVerticalAngleDeg(double newVerticalAngleDeg) {
-        verticalAngleDeg = newVerticalAngleDeg;
-    }
-
-    public double getVerticalAngleDeg() {
-        return verticalAngleDeg;
-    }
-
     public void setInitAzimuth(double newInitAzimuth) {
         initAzimuth = newInitAzimuth;
     }
